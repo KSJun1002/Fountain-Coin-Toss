@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. 웹 브라우저 스타일링 및 마진 최소화 (스트림릿 한글 폰트 잘림 방지용 초강력 강제 주입 스타일 추가)
+# 2. 웹 브라우저 스타일링 및 마진 최소화 (제목 글자 잘림 현상 완화 스타일 추가)
 st.markdown("""
     <style>
         .block-container {
@@ -18,30 +18,12 @@ st.markdown("""
             padding-left: 1.5rem;
             padding-right: 1.5rem;
         }
-        
-        /* 스트림릿 클라우드 렌더링 엔진 내부의 h1 글자 하단부 잘림 오류 완전 해결 
-           상위 마크다운 컨테이너 및 스트림릿 기본 테마 캐시 스타일의 경계를 override 합니다.
-        */
-        h1, h2, h3, h4, h5, h6, 
-        .st-emotion-cache-kg8g9b h1,
-        div[data-testid="stMarkdownContainer"] h1,
-        .main-title-box h1 {
-            font-family: 'Noto Sans KR', sans-serif !important;
-            line-height: 1.6 !important;
-            padding-top: 5px !important;
-            padding-bottom: 25px !important;
-            margin-bottom: 5px !important;
-            overflow: visible !important;
-            display: block !important;
-        }
-        
-        /* 캡션 텍스트 및 기본 텍스트 하단 잘림 해결 */
-        p, span, div, .st-emotion-cache-183lyg7, .st-caption {
-            line-height: 1.5 !important;
-            padding-bottom: 4px !important;
+        /* 메인 제목(h1) 한글 자모음 하단부 잘림 문제 완벽 해결 */
+        h1 {
+            line-height: 1.4 !important;
+            padding-bottom: 12px !important;
             overflow: visible !important;
         }
-
         iframe {
             border-radius: 16px;
             box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4), 0 10px 15px -10px rgba(0, 0, 0, 0.4);
@@ -49,13 +31,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 스트림릿 본문 제목부 렌더링 (글꼴 잘림 방지 가공 완료)
-st.markdown('<div class="main-title-box"><h1>🪙 분수대에 동전 던지기 - 통합 시뮬레이터</h1></div>', unsafe_allow_html=True)
-st.markdown('<div style="color: #94a3b8; font-size: 0.85rem; margin-top: -15px; margin-bottom: 15px;">30806 김성준 - 물리학 2 창의융합과제 설계 시뮬레이션 엔진 배포버전</div>', unsafe_allow_html=True)
-
-st.info("💡 초기 속도, 투사 각도, 그리고 출발지 고도를 조절하여 클래식 분수대 속에 동전을 골인시키는 물리학 실험 앱입니다. 학습 탭에서는 이론, 동적 그래프 변화, 계산기 가동이 모두 작동합니다.")
-
-# 4. 홈 화면, 게임 인터페이스, 물리학 3단 학습모드, 설정창이 완벽하게 결합된 원본 HTML5 엔진 코드
+# 3. 홈 화면, 게임 인터페이스, 물리학 3단 학습모드, 설정창이 완벽하게 결합된 원본 HTML5 엔진 코드
 html_code = """
 <!DOCTYPE html>
 <html lang="ko">
@@ -1818,6 +1794,8 @@ html_code = """
 # 4. Streamlit 화면 렌더링 부
 st.title("🪙 분수대에 동전 던지기 - 통합 시뮬레이터")
 st.caption("30806 김성준 - 물리학 2 창의융합과제 설계 시뮬레이션 엔진 배포버전")
+
+st.info("💡 초기 속도, 투사 각도, 그리고 출발지 고도를 조절하여 클래식 분수대 속에 동전을 골인시키는 물리학 실험 앱입니다. 학습 탭에서는 이론, 동적 그래프 변화, 계산기 가동이 모두 작동합니다.")
 
 # 5. HTML 컴포넌트를 반응형으로 삽입
 components.html(html_code, height=680, scrolling=True)
