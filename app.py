@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. 웹 브라우저 스타일링 및 마진 최소화 (오류 원인이었던 파라미터명 수정 완료)
+# 2. 웹 브라우저 스타일링 및 마진 최소화
 st.markdown("""
     <style>
         .block-container {
@@ -769,7 +769,7 @@ html_code = """
         // Scaling factors
         // Canvas coordinate reference system: Launcher is at x=1.5m, ground level is at baseline.
         // We will transform these physical metrics to visual pixels.
-        const originPx = { x: 80, y: 310 }; // (0,0) offset on Main Canvas
+        let originPx = { x: 80, y: 310 }; // (0,0) offset on Main Canvas (will be updated dynamically)
         const pxPerMeter = 18; // scale factor
 
         // --- Screen & State Routers ---
@@ -784,9 +784,16 @@ html_code = """
             // Init Main Simulation Canvas
             mainCanvas = document.getElementById('physics-canvas');
             mainCtx = mainCanvas.getContext('2d');
+            
+            // Initial container measurement
             resizeMainCanvas();
+            
             window.addEventListener('resize', () => {
                 resizeMainCanvas();
+                if(currentScreen === 'learn' && currentTab === 'graph') {
+                    resizeGraphCanvases();
+                    drawInteractiveGraphs();
+                }
                 drawScene();
             });
 
@@ -802,8 +809,30 @@ html_code = """
 
         function resizeMainCanvas() {
             const rect = mainCanvas.parentNode.getBoundingClientRect();
-            mainCanvas.width = rect.width;
-            mainCanvas.height = rect.height;
+            // Fallback inside streamlit in case parent bounding width/height starts at 0
+            mainCanvas.width = rect.width || 600;
+            mainCanvas.height = rect.height || 384;
+            
+            // Dynamically lock ground origin near the bottom of canvas
+            originPx.y = mainCanvas.height - 74;
+        }
+
+        function resizeGraphCanvases() {
+            if (graphCanvas) {
+                const rect = graphCanvas.parentNode.getBoundingClientRect();
+                graphCanvas.width = rect.width || 400;
+                graphCanvas.height = rect.height || 320;
+            }
+            if (xtCanvas) {
+                const rect = xtCanvas.parentNode.getBoundingClientRect();
+                xtCanvas.width = rect.width || 200;
+                xtCanvas.height = rect.height || 176;
+            }
+            if (ytCanvas) {
+                const rect = ytCanvas.parentNode.getBoundingClientRect();
+                ytCanvas.width = rect.width || 200;
+                ytCanvas.height = rect.height || 176;
+            }
         }
 
         function goHome() {
@@ -816,6 +845,10 @@ html_code = """
             hideAllScreens();
             document.getElementById('game-screen').classList.remove('hidden');
             currentScreen = 'game';
+            
+            // CRITICAL: Force canvas size re-evaluation once container hidden attribute is removed!
+            resizeMainCanvas(); 
+            
             initLevel();
             drawScene();
         }
@@ -852,6 +885,13 @@ html_code = """
             } else if(tabId === 'graph') {
                 document.getElementById('tab-graph').classList.remove('hidden');
                 document.getElementById('tab-graph-btn').className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-cyan-400 bg-slate-800 shadow";
+                
+                // Initialize canvases after Tab is visible
+                graphCanvas = document.getElementById('chart-canvas');
+                xtCanvas = document.getElementById('xt-canvas');
+                ytCanvas = document.getElementById('yt-canvas');
+                
+                resizeGraphCanvases();
                 initGraphCanvases();
                 drawInteractiveGraphs();
             } else if(tabId === 'calculator') {
@@ -883,7 +923,6 @@ html_code = """
             document.getElementById('env-k').innerText = air_drag_k.toFixed(2);
             document.getElementById('drag-display-val').innerText = air_drag_k.toFixed(2);
 
-            // Set tolerances based on difficulty
             if(game_difficulty === 'easy') {
                 targetTolerance = 1.5;
             } else if(game_difficulty === 'normal') {
@@ -932,13 +971,11 @@ html_code = """
 
         // --- Level Creator ---
         function initLevel() {
-            // Level dynamics
-            targetX = 10.0 + (level * 3.2); // target gets farther
-            targetWidth = Math.max(1.2, 3.0 - (level * 0.3)); // target gets narrower
+            targetX = 10.0 + (level * 3.2); 
+            targetWidth = Math.max(1.2, 3.0 - (level * 0.3)); 
             
-            // Set Wind Factor (only level 3+)
             if(level >= 3) {
-                windFactor = (Math.random() * 4 - 2); // -2.0m/s2 to +2.0m/s2
+                windFactor = (Math.random() * 4 - 2); 
                 document.getElementById('wind-indicator').classList.remove('hidden');
                 document.getElementById('wind-value').innerText = `${windFactor > 0 ? '▶ ' : '◀ '}${Math.abs(windFactor).toFixed(1)} m/s²`;
             } else {
@@ -952,7 +989,6 @@ html_code = """
             document.getElementById('target-width').innerText = targetWidth.toFixed(1);
             document.getElementById('target-tolerance').innerText = targetTolerance.toFixed(1);
 
-            // Update UI hearts/coins
             const lc = document.getElementById('lives-container');
             lc.innerHTML = '';
             for(let i=0; i<3; i++) {
@@ -996,7 +1032,6 @@ html_code = """
 
             const x_range = vx0 * t_flight;
             
-            // Peak height
             let peak_y = h;
             if (vy0 > 0) {
                 const t_peak = vy0 / g;
@@ -1010,7 +1045,7 @@ html_code = """
 
         // --- Coin Thrower Launcher ---
         function launchCoin() {
-            if(coin.active) return; // wait for current coin simulation
+            if(coin.active) return; 
 
             const { v0, theta, h } = getLauncherParams();
             
@@ -1023,7 +1058,6 @@ html_code = """
             coin.trail = [];
             coin.active = true;
 
-            // disable buttons
             document.getElementById('btn-fire').disabled = true;
             document.getElementById('btn-fire').classList.add('opacity-50');
         }
@@ -1038,7 +1072,6 @@ html_code = """
         }
 
         function updatePhysics() {
-            // Update particles
             for(let i=particles.length-1; i>=0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
@@ -1050,11 +1083,10 @@ html_code = """
 
             if(!coin.active) return;
 
-            const dt = 0.016; // 60 FPS tick approx
+            const dt = 0.016; 
             coin.t += dt;
-            coin.spinAngle += 0.15;
+            coin.spinAngle += 0.18; 
 
-            // Record trail
             coin.trail.push({ x: coin.x, y: coin.y });
             if(coin.trail.length > 50) coin.trail.shift();
 
@@ -1067,7 +1099,6 @@ html_code = """
             coin.x += coin.vx * dt;
             coin.y += coin.vy * dt;
 
-            // Check collision with Ground (y <= 0)
             if(coin.y <= 0) {
                 coin.y = 0;
                 coin.active = false;
@@ -1078,14 +1109,14 @@ html_code = """
 
         function spawnWaterSplash(impactX) {
             const isSuccess = Math.abs(impactX - targetX) <= (targetWidth / 2);
-            const color = isSuccess ? '#22d3ee' : '#e2e8f0';
+            const color = isSuccess ? '#22d3ee' : '#cbd5e1';
             
-            for(let i=0; i<25; i++) {
+            for(let i=0; i<30; i++) {
                 particles.push({
                     x: originPx.x + (impactX * pxPerMeter),
                     y: originPx.y,
-                    vx: (Math.random() * 4 - 2),
-                    vy: -(Math.random() * 6 + 3),
+                    vx: (Math.random() * 5 - 2.5),
+                    vy: -(Math.random() * 7 + 4),
                     alpha: 1.0,
                     color: color
                 });
@@ -1100,10 +1131,8 @@ html_code = """
             const diffX = Math.abs(coin.x - targetX);
             const isSuccess = diffX <= (targetWidth / 2);
 
-            // Add attempt to log history
             addToHistory(isSuccess);
 
-            // Result values mapping
             document.getElementById('res-v0').innerText = parseFloat(document.getElementById('v0-slider').value).toFixed(1);
             document.getElementById('res-theta').innerText = document.getElementById('theta-slider').value;
             document.getElementById('res-t').innerText = coin.t.toFixed(2);
@@ -1217,7 +1246,7 @@ html_code = """
 
         // --- Scene Visual Renderer (Canvas Engine) ---
         function drawScene() {
-            if(!mainCtx) return;
+            if(!mainCtx || mainCanvas.width === 0 || mainCanvas.height === 0) return;
             mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
 
             const { v0, theta, h } = getLauncherParams();
@@ -1226,7 +1255,7 @@ html_code = """
             mainCtx.beginPath();
             mainCtx.moveTo(0, originPx.y);
             mainCtx.lineTo(mainCanvas.width, originPx.y);
-            mainCtx.strokeStyle = '#1e293b';
+            mainCtx.strokeStyle = '#334155';
             mainCtx.lineWidth = 4;
             mainCtx.stroke();
 
@@ -1234,41 +1263,41 @@ html_code = """
             mainCtx.fillStyle = '#0f172a';
             mainCtx.fillRect(0, originPx.y + 2, mainCanvas.width, mainCanvas.height - originPx.y);
 
-            // 1. Draw Target Classical Fountain
+            // 1. Draw Target Classical Stone Fountain (고대비 및 높은 시인성 석조 분수대 모델링)
             const targetCenterPx = originPx.x + (targetX * pxPerMeter);
             const targetWidthPx = targetWidth * pxPerMeter;
 
-            // Fountain Base & Pillar
-            mainCtx.fillStyle = '#334155';
-            mainCtx.strokeStyle = '#475569';
-            mainCtx.lineWidth = 2;
-            mainCtx.fillRect(targetCenterPx - 35, originPx.y - 12, 70, 12);
-            mainCtx.strokeRect(targetCenterPx - 35, originPx.y - 12, 70, 12);
-
-            // Mid Bowl
-            mainCtx.beginPath();
-            mainCtx.ellipse(targetCenterPx, originPx.y - 12, targetWidthPx/2, 10, 0, 0, 2 * Math.PI);
+            // [석조 분수대 1단 바닥 받침대]
             mainCtx.fillStyle = '#475569';
+            mainCtx.strokeStyle = '#64748b';
+            mainCtx.lineWidth = 2.5;
+            mainCtx.fillRect(targetCenterPx - 38, originPx.y - 12, 76, 12);
+            mainCtx.strokeRect(targetCenterPx - 38, originPx.y - 12, 76, 12);
+
+            // [석조 분수대 2단 타원 그릇]
+            mainCtx.beginPath();
+            mainCtx.ellipse(targetCenterPx, originPx.y - 12, targetWidthPx/2, 11, 0, 0, 2 * Math.PI);
+            mainCtx.fillStyle = '#64748b';
             mainCtx.fill();
             mainCtx.stroke();
 
-            // Water Ripple Surface
-            mainCtx.fillStyle = 'rgba(6, 182, 212, 0.4)';
+            // [석조 분수대 3단 중앙 돌출 기둥]
+            mainCtx.fillStyle = '#475569';
+            mainCtx.fillRect(targetCenterPx - 8, originPx.y - 45, 16, 33);
+            mainCtx.strokeRect(targetCenterPx - 8, originPx.y - 45, 16, 33);
+
+            // [물 차오름 푸른 입체 수면 및 물결]
+            mainCtx.fillStyle = 'rgba(6, 182, 212, 0.45)';
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 14, targetWidthPx/2.05, 8, 0, 0, 2 * Math.PI);
             mainCtx.fill();
 
-            // Center Column
-            mainCtx.fillStyle = '#334155';
-            mainCtx.fillRect(targetCenterPx - 8, originPx.y - 45, 16, 33);
-            mainCtx.strokeRect(targetCenterPx - 8, originPx.y - 45, 16, 33);
-
-            // Fountain Water Stream
+            // [중앙 기둥 꼭대기에서 뿜어나오는 푸른 분수 가닥]
             const seconds = Date.now() / 1000;
-            mainCtx.strokeStyle = 'rgba(34, 211, 238, 0.6)';
-            mainCtx.lineWidth = 2;
+            mainCtx.strokeStyle = 'rgba(34, 211, 238, 0.7)';
+            mainCtx.lineWidth = 2.5;
             mainCtx.beginPath();
-            mainCtx.arc(targetCenterPx, originPx.y - 45, 20 + Math.sin(seconds*4)*2, Math.PI, 0);
+            mainCtx.arc(targetCenterPx, originPx.y - 45, 18 + Math.sin(seconds * 4) * 2.5, Math.PI, 0);
             mainCtx.stroke();
 
             // 2. Elevated Platform Base
@@ -1285,9 +1314,10 @@ html_code = """
             mainCtx.rotate(-theta);
             
             mainCtx.fillStyle = '#475569';
-            mainCtx.fillRect(0, -5, 20, 10);
-            mainCtx.strokeStyle = '#64748b';
-            mainCtx.strokeRect(0, -5, 20, 10);
+            mainCtx.fillRect(0, -6, 22, 12);
+            mainCtx.strokeStyle = '#94a3b8';
+            mainCtx.lineWidth = 1.5;
+            mainCtx.strokeRect(0, -6, 22, 12);
             mainCtx.restore();
 
             // Coordinates info text
@@ -1300,7 +1330,7 @@ html_code = """
                 drawPreviewTrajectory(v0, theta, h);
             }
 
-            // Draw particles
+            // Draw splash particles
             for(let p of particles) {
                 mainCtx.fillStyle = p.color;
                 mainCtx.globalAlpha = p.alpha;
@@ -1308,14 +1338,14 @@ html_code = """
                 mainCtx.arc(p.x, p.y, 2.5, 0, Math.PI*2);
                 mainCtx.fill();
             }
-            mainCtx.globalAlpha = 1.0;
+            mainCtx.globalAlpha = 1.0; // reset
 
-            // 4. Draw Active Spinning Coin & Trail
+            // 4. Draw Active Spinning Coin & Trail (회전하는 금빛 입체 동전)
             if(coin.active) {
                 if(coin.trail.length > 1) {
                     mainCtx.beginPath();
                     mainCtx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-                    mainCtx.lineWidth = 3;
+                    mainCtx.lineWidth = 3.5;
                     const startPx = physicsToCanvas(coin.trail[0].x, coin.trail[0].y);
                     mainCtx.moveTo(startPx.x, startPx.y);
                     for(let i=1; i<coin.trail.length; i++) {
@@ -1329,23 +1359,23 @@ html_code = """
                 const coinPx = physicsToCanvas(coin.x, coin.y);
                 mainCtx.save();
                 mainCtx.translate(coinPx.x, coinPx.y);
-                mainCtx.scale(Math.abs(Math.sin(coin.spinAngle)), 1.0);
+                mainCtx.scale(Math.abs(Math.sin(coin.spinAngle)), 1.0); // 자전하는 입체감 효과
 
                 // Exterior Golden ring
                 mainCtx.beginPath();
-                mainCtx.arc(0, 0, 7.5, 0, Math.PI * 2);
+                mainCtx.arc(0, 0, 9, 0, Math.PI * 2);
                 mainCtx.fillStyle = '#d97706';
                 mainCtx.fill();
 
                 // Inner Golden core
                 mainCtx.beginPath();
-                mainCtx.arc(0, 0, 6, 0, Math.PI * 2);
+                mainCtx.arc(0, 0, 7.5, 0, Math.PI * 2);
                 mainCtx.fillStyle = '#fbbf24';
                 mainCtx.fill();
 
                 // '₩' Text symbol inside coin
                 mainCtx.fillStyle = '#78350f';
-                mainCtx.font = 'black 8px Arial';
+                mainCtx.font = 'black 9px Arial';
                 mainCtx.textAlign = 'center';
                 mainCtx.textBaseline = 'middle';
                 mainCtx.fillText('₩', 0, 0);
@@ -1358,7 +1388,7 @@ html_code = """
         function drawPreviewTrajectory(v0, theta_rad, h) {
             mainCtx.beginPath();
             mainCtx.setLineDash([3, 4]);
-            mainCtx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+            mainCtx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
             mainCtx.lineWidth = 1.2;
 
             const t_max = 5;
@@ -1409,18 +1439,12 @@ html_code = """
 
         // --- Tab 2: Interactive Graph Rendering ---
         function initGraphCanvases() {
-            graphCanvas = document.getElementById('chart-canvas');
+            if(!graphCanvas) return;
             graphCtx = graphCanvas.getContext('2d');
-            
-            xtCanvas = document.getElementById('xt-canvas');
             xtCtx = xtCanvas.getContext('2d');
-
-            ytCanvas = document.getElementById('yt-canvas');
             ytCtx = ytCanvas.getContext('2d');
 
             const bindGraphEvent = (id, valId, suffix) => {
-                const element = document.getElementById(id);
-                // element.replaceWith(element.cloneNode(true)); // remove old listeners
                 document.getElementById(id).addEventListener('input', (e) => {
                     document.getElementById(valId).innerText = `${e.target.value} ${suffix}`;
                     drawInteractiveGraphs();
