@@ -757,8 +757,11 @@ html_code = """
             trail: [] // historical coordinate array
         };
 
-        // Splash Particles Struct
+        // Splash Particles Struct (for coin impact)
         let particles = [];
+        
+        // Shimmering Fountain Water Drops (persistent animated fountain water)
+        let fountainDrops = [];
 
         // Canvas setups
         let mainCanvas, mainCtx;
@@ -1072,6 +1075,7 @@ html_code = """
         }
 
         function updatePhysics() {
+            // Coin impact splash particles physics
             for(let i=particles.length-1; i>=0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
@@ -1079,6 +1083,30 @@ html_code = """
                 p.vy += 0.25;
                 p.alpha -= 0.02;
                 if(p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            // Real-time Fountain Water drops (Persistent animation)
+            const targetCenterPx = originPx.x + (targetX * pxPerMeter);
+            if (Math.random() < 0.4) { // Generate fountain water droplets
+                fountainDrops.push({
+                    x: targetCenterPx + (Math.random() * 4 - 2),
+                    y: originPx.y - 45,
+                    vx: (Math.random() * 1.6 - 0.8),
+                    vy: -(Math.random() * 3 + 4),
+                    alpha: 1.0,
+                    size: Math.random() * 2 + 1
+                });
+            }
+
+            for(let i=fountainDrops.length-1; i>=0; i--) {
+                const d = fountainDrops[i];
+                d.x += d.vx;
+                d.y += d.vy;
+                d.vy += 0.16; // gravity pulls fountain water down
+                d.alpha -= 0.015;
+                if (d.y > originPx.y - 12 || d.alpha <= 0) {
+                    fountainDrops.splice(i, 1);
+                }
             }
 
             if(!coin.active) return;
@@ -1263,42 +1291,87 @@ html_code = """
             mainCtx.fillStyle = '#0f172a';
             mainCtx.fillRect(0, originPx.y + 2, mainCanvas.width, mainCanvas.height - originPx.y);
 
-            // 1. Draw Target Classical Stone Fountain (고대비 및 높은 시인성 석조 분수대 모델링)
+            // 1. Draw Target Classical Stone Fountain (고급 대리석 및 포물선 입체 분수 드로잉)
             const targetCenterPx = originPx.x + (targetX * pxPerMeter);
             const targetWidthPx = targetWidth * pxPerMeter;
 
-            // [석조 분수대 1단 바닥 받침대]
-            mainCtx.fillStyle = '#475569';
-            mainCtx.strokeStyle = '#64748b';
-            mainCtx.lineWidth = 2.5;
-            mainCtx.fillRect(targetCenterPx - 38, originPx.y - 12, 76, 12);
-            mainCtx.strokeRect(targetCenterPx - 38, originPx.y - 12, 76, 12);
+            // [대리석 광택 질감 생성을 위한 그라데이션 선언]
+            const grayMarbleGrad = mainCtx.createLinearGradient(targetCenterPx - targetWidthPx/2, 0, targetCenterPx + targetWidthPx/2, 0);
+            grayMarbleGrad.addColorStop(0, '#334155');
+            grayMarbleGrad.addColorStop(0.3, '#475569');
+            grayMarbleGrad.addColorStop(0.5, '#64748b');
+            grayMarbleGrad.addColorStop(0.8, '#475569');
+            grayMarbleGrad.addColorStop(1, '#1e293b');
+
+            const lightMarbleGrad = mainCtx.createLinearGradient(targetCenterPx - 10, 0, targetCenterPx + 10, 0);
+            lightMarbleGrad.addColorStop(0, '#475569');
+            lightMarbleGrad.addColorStop(0.5, '#94a3b8');
+            lightMarbleGrad.addColorStop(1, '#334155');
+
+            // [석조 분수대 1단 바닥 받침대 - Marble block]
+            mainCtx.fillStyle = grayMarbleGrad;
+            mainCtx.strokeStyle = '#475569';
+            mainCtx.lineWidth = 2;
+            mainCtx.beginPath();
+            mainCtx.roundRect(targetCenterPx - 40, originPx.y - 12, 80, 12, [3, 3, 0, 0]);
+            mainCtx.fill();
+            mainCtx.stroke();
 
             // [석조 분수대 2단 타원 그릇]
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 12, targetWidthPx/2, 11, 0, 0, 2 * Math.PI);
-            mainCtx.fillStyle = '#64748b';
+            mainCtx.fillStyle = grayMarbleGrad;
             mainCtx.fill();
             mainCtx.stroke();
 
-            // [석조 분수대 3단 중앙 돌출 기둥]
-            mainCtx.fillStyle = '#475569';
-            mainCtx.fillRect(targetCenterPx - 8, originPx.y - 45, 16, 33);
-            mainCtx.strokeRect(targetCenterPx - 8, originPx.y - 45, 16, 33);
+            // [석조 분수대 3단 중앙 돌출 대리석 기둥]
+            mainCtx.fillStyle = lightMarbleGrad;
+            mainCtx.beginPath();
+            mainCtx.roundRect(targetCenterPx - 8, originPx.y - 45, 16, 33, [2, 2, 0, 0]);
+            mainCtx.fill();
+            mainCtx.stroke();
 
-            // [물 차오름 푸른 입체 수면 및 물결]
-            mainCtx.fillStyle = 'rgba(6, 182, 212, 0.45)';
+            // [물 차오름 푸른 입체 수면 그라데이션 및 찰랑이는 물결]
+            const waterGrad = mainCtx.createRadialGradient(targetCenterPx, originPx.y - 14, 2, targetCenterPx, originPx.y - 14, targetWidthPx/2);
+            waterGrad.addColorStop(0, '#22d3ee');
+            waterGrad.addColorStop(0.4, 'rgba(6, 182, 212, 0.7)');
+            waterGrad.addColorStop(1, 'rgba(8, 145, 178, 0.35)');
+
+            mainCtx.fillStyle = waterGrad;
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 14, targetWidthPx/2.05, 8, 0, 0, 2 * Math.PI);
             mainCtx.fill();
 
-            // [중앙 기둥 꼭대기에서 뿜어나오는 푸른 분수 가닥]
+            // [물줄기 애니메이션 렌더링 - 3단 스프레이 포물선 아크]
             const seconds = Date.now() / 1000;
-            mainCtx.strokeStyle = 'rgba(34, 211, 238, 0.7)';
+            mainCtx.lineWidth = 1.8;
+            
+            // 왼쪽 흐르는 물줄기 1
+            mainCtx.strokeStyle = 'rgba(34, 211, 238, 0.65)';
+            mainCtx.beginPath();
+            mainCtx.arc(targetCenterPx - 10, originPx.y - 42, 18 + Math.sin(seconds * 4) * 2, Math.PI * 0.9, 0);
+            mainCtx.stroke();
+            
+            // 오른쪽 흐르는 물줄기 2
+            mainCtx.beginPath();
+            mainCtx.arc(targetCenterPx + 10, originPx.y - 42, 18 + Math.cos(seconds * 4) * 2, Math.PI, 0.1 * Math.PI);
+            mainCtx.stroke();
+
+            // 중앙 높이 솟구치는 물줄기 3
+            mainCtx.strokeStyle = 'rgba(103, 232, 249, 0.8)';
             mainCtx.lineWidth = 2.5;
             mainCtx.beginPath();
-            mainCtx.arc(targetCenterPx, originPx.y - 45, 18 + Math.sin(seconds * 4) * 2.5, Math.PI, 0);
+            mainCtx.moveTo(targetCenterPx, originPx.y - 45);
+            mainCtx.quadraticCurveTo(targetCenterPx, originPx.y - 70 - Math.sin(seconds * 5) * 4, targetCenterPx + 1, originPx.y - 45);
             mainCtx.stroke();
+
+            // [실시간 중력 영향 분수 물방울 그리기 (persistent fountain drops)]
+            for (let d of fountainDrops) {
+                mainCtx.fillStyle = `rgba(165, 243, 252, ${d.alpha})`;
+                mainCtx.beginPath();
+                mainCtx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+                mainCtx.fill();
+            }
 
             // 2. Elevated Platform Base
             const launchH_px = h * pxPerMeter;
@@ -1330,7 +1403,7 @@ html_code = """
                 drawPreviewTrajectory(v0, theta, h);
             }
 
-            // Draw splash particles
+            // Draw splash particles (for coin impact)
             for(let p of particles) {
                 mainCtx.fillStyle = p.color;
                 mainCtx.globalAlpha = p.alpha;
@@ -1457,24 +1530,20 @@ html_code = """
             bindGraphEvent('graph-g', 'graph-g-val', 'm/s²');
         }
 
+        // 그래프 렌더링에 변경 없음
         function drawInteractiveGraphs() {
             if(!graphCtx) return;
 
-            // Fetch dynamic values
             const v0 = parseFloat(document.getElementById('graph-v0').value);
             const theta = parseFloat(document.getElementById('graph-theta').value) * Math.PI / 180;
             const h = parseFloat(document.getElementById('graph-h').value);
             const g = parseFloat(document.getElementById('graph-g').value);
 
-            // Draw Y-X Trajectory Plot
             drawTrajectoryGraph(graphCanvas, graphCtx, v0, theta, h, g);
-            
-            // Draw Sub-component charts
             drawXTGraph(xtCanvas, xtCtx, v0, theta, h, g);
             drawYTGraph(ytCanvas, ytCtx, v0, theta, h, g);
         }
 
-        // 1. Draw main Y-X Trajectory
         function drawTrajectoryGraph(canvas, ctx, v0, theta, h, g) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -1488,7 +1557,6 @@ html_code = """
             const mapX = (x) => pad.left + (x / xMaxRange) * chartW;
             const mapY = (y) => pad.top + chartH - (y / yMaxRange) * chartH;
 
-            // Render Grids
             ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 0.8;
             ctx.fillStyle = '#64748b';
@@ -1520,8 +1588,7 @@ html_code = """
             ctx.lineTo(pad.left + chartW, pad.top + chartH);
             ctx.stroke();
 
-            // Plot Mathematical Parabolic Curve
-            ctx.strokeStyle = '#06b6d4'; // Cyan
+            ctx.strokeStyle = '#06b6d4'; 
             ctx.lineWidth = 3;
             ctx.beginPath();
 
@@ -1564,7 +1631,6 @@ html_code = """
             ctx.fillText('수평거리 (x)', pad.left + chartW/2 - 20, pad.top + chartH + 32);
         }
 
-        // 2. Draw Horizontal Position - Time Graph
         function drawXTGraph(canvas, ctx, v0, theta, h, g) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const pad = { top: 20, right: 15, bottom: 25, left: 35 };
@@ -1585,7 +1651,7 @@ html_code = """
             ctx.lineTo(pad.left + w, pad.top + hC);
             ctx.stroke();
 
-            ctx.strokeStyle = '#34d399'; // Emerald
+            ctx.strokeStyle = '#34d399'; 
             ctx.lineWidth = 2.5;
             ctx.beginPath();
             
@@ -1601,7 +1667,6 @@ html_code = """
             ctx.fillText('거리(x)', 5, pad.top + 10);
         }
 
-        // 3. Draw Vertical Position - Time Graph
         function drawYTGraph(canvas, ctx, v0, theta, h, g) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const pad = { top: 20, right: 15, bottom: 25, left: 35 };
@@ -1622,7 +1687,7 @@ html_code = """
             ctx.lineTo(pad.left + w, pad.top + hC);
             ctx.stroke();
 
-            ctx.strokeStyle = '#f43f5e'; // Rose
+            ctx.strokeStyle = '#f43f5e'; 
             ctx.lineWidth = 2.5;
             ctx.beginPath();
 
@@ -1653,7 +1718,6 @@ html_code = """
             ctx.fillText('높이(y)', 5, pad.top + 10);
         }
 
-        // --- Tab 3: Formula Physics Calculator Engine ---
         function calculatePhysics() {
             const v0 = parseFloat(document.getElementById('calc-v0').value);
             const theta_deg = parseFloat(document.getElementById('calc-theta').value);
