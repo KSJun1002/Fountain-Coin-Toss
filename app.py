@@ -112,24 +112,43 @@ html_code = """
 
         <!-- ① START SCREEN (HOME) -->
         <section id="home-screen" class="w-full max-w-4xl py-12 flex flex-col items-center justify-center text-center space-y-8 animate-fadeIn">
-            <!-- Decorative Fountain Animation Graphic -->
+            <!-- Decorative 3-Tier Marble Fountain Animation Graphic -->
             <div class="relative w-64 h-64 flex items-end justify-center mb-4">
                 <!-- Sky backdrop -->
                 <div class="absolute inset-0 bg-gradient-to-b from-blue-950/40 to-cyan-950/20 rounded-full blur-2xl"></div>
-                <!-- Fountain Structure -->
-                <div class="relative z-10 w-48 h-12 bg-slate-700 rounded-t-full border-t border-slate-500 shadow-xl flex items-center justify-center overflow-hidden">
-                    <div class="absolute inset-x-0 bottom-0 h-4 bg-cyan-500/40 blur-sm"></div>
+                
+                <!-- 3-Tier Marble Fountain Base Structure -->
+                <div class="relative z-10 flex flex-col items-center">
+                    <!-- Top Bowl (3단 소형 보울) -->
+                    <div class="w-16 h-3.5 bg-gradient-to-r from-slate-600 via-slate-300 to-slate-800 rounded-full border border-slate-500 shadow-md"></div>
+                    <!-- Top Stem (상부 기둥) -->
+                    <div class="w-4 h-6 bg-gradient-to-r from-slate-700 via-slate-400 to-slate-900 border-x border-slate-600 shadow-inner"></div>
+                    <!-- Middle Bowl (2단 중간 보울) -->
+                    <div class="w-32 h-6 bg-gradient-to-r from-slate-600 via-slate-400 to-slate-800 rounded-full border border-slate-500 shadow-lg flex items-center justify-center relative">
+                        <!-- Water surface ripple -->
+                        <div class="absolute inset-1 bg-cyan-500/30 rounded-full blur-[1px] animate-pulse"></div>
+                    </div>
+                    <!-- Bottom Pedestal (하부 받침대) -->
+                    <div class="w-8 h-10 bg-gradient-to-r from-slate-700 via-slate-500 to-slate-900 border-x border-slate-600 shadow-inner"></div>
+                    <!-- Bottom Base Pool (1단 가장 큰 대형 수조) -->
+                    <div class="w-48 h-10 bg-gradient-to-r from-slate-800 via-slate-600 to-slate-950 rounded-t-full border-t border-slate-500 shadow-xl flex items-center justify-center overflow-hidden relative">
+                        <!-- Water pool effect -->
+                        <div class="absolute inset-x-0 bottom-0 h-4 bg-cyan-500/40 blur-[1px]"></div>
+                    </div>
                 </div>
-                <!-- Middle Pillar -->
-                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 w-8 h-20 bg-slate-600 rounded-t"></div>
-                <!-- Upper Bowl -->
-                <div class="absolute bottom-32 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-500 rounded-full border-t border-slate-400 shadow-md"></div>
-                <!-- Fountain Water Jet (Animated SVGs) -->
-                <svg class="absolute bottom-20 left-1/2 -translate-x-1/2 w-40 h-32 pointer-events-none" viewBox="0 0 100 80">
-                    <path class="water-splash fill-none stroke-cyan-400/80 stroke-[3] stroke-dasharray-[4,2]" d="M 50,80 Q 20,20 10,80" />
-                    <path class="water-splash fill-none stroke-cyan-400/80 stroke-[3]" d="M 50,80 Q 80,20 90,80" style="animation-delay: 0.5s;" />
-                    <path class="water-splash fill-none stroke-cyan-300 stroke-[4]" d="M 50,40 Q 50,5 50,40" style="animation-delay: 1s;" />
+
+                <!-- Animated Water Sprays SVG -->
+                <svg class="absolute bottom-10 left-1/2 -translate-x-1/2 w-56 h-48 pointer-events-none" viewBox="0 0 100 80">
+                    <!-- Top bowl splashes spilling to Mid bowl -->
+                    <path class="water-splash fill-none stroke-cyan-400/80 stroke-[2] stroke-dasharray-[3,1.5]" d="M 50,22 Q 35,-2 25,25" />
+                    <path class="water-splash fill-none stroke-cyan-400/80 stroke-[2]" d="M 50,22 Q 65,-2 75,25" style="animation-delay: 0.5s;" />
+                    <!-- Center main spout -->
+                    <path class="water-splash fill-none stroke-cyan-300 stroke-[3]" d="M 50,20 Q 50,-8 50,20" style="animation-delay: 1s;" />
+                    <!-- Mid bowl spilling water to bottom base -->
+                    <path class="water-splash fill-none stroke-cyan-500/60 stroke-[1.5]" d="M 34,35 Q 20,45 15,70" style="animation-delay: 0.3s;" />
+                    <path class="water-splash fill-none stroke-cyan-500/60 stroke-[1.5]" d="M 66,35 Q 80,45 85,70" style="animation-delay: 0.8s;" />
                 </svg>
+
                 <!-- Flying Coin Arc -->
                 <div class="absolute top-12 left-4 w-6 h-6 bg-amber-400 rounded-full border-2 border-amber-300 shadow-lg shadow-amber-400/50 flex items-center justify-center animate-bounce">
                     <span class="text-[8px] font-bold text-amber-900">₩</span>
@@ -1087,14 +1106,14 @@ html_code = """
 
             // Real-time Fountain Water drops (Persistent animation)
             const targetCenterPx = originPx.x + (targetX * pxPerMeter);
-            if (Math.random() < 0.4) { // Generate fountain water droplets
+            if (Math.random() < 0.4) { // Generate fountain water droplets from the top (y - 58)
                 fountainDrops.push({
                     x: targetCenterPx + (Math.random() * 4 - 2),
-                    y: originPx.y - 45,
-                    vx: (Math.random() * 1.6 - 0.8),
-                    vy: -(Math.random() * 3 + 4),
+                    y: originPx.y - 58,
+                    vx: (Math.random() * 1.4 - 0.7),
+                    vy: -(Math.random() * 2.5 + 3.5),
                     alpha: 1.0,
-                    size: Math.random() * 2 + 1
+                    size: Math.random() * 1.8 + 1
                 });
             }
 
@@ -1291,78 +1310,118 @@ html_code = """
             mainCtx.fillStyle = '#0f172a';
             mainCtx.fillRect(0, originPx.y + 2, mainCanvas.width, mainCanvas.height - originPx.y);
 
-            // 1. Draw Target Classical Stone Fountain (고급 대리석 및 포물선 입체 분수 드로잉)
+            // 1. Draw Target Classical Stone Fountain (대리석 3단 석조 분수대 정교화)
             const targetCenterPx = originPx.x + (targetX * pxPerMeter);
             const targetWidthPx = targetWidth * pxPerMeter;
 
-            // [대리석 광택 질감 생성을 위한 그라데이션 선언]
-            const grayMarbleGrad = mainCtx.createLinearGradient(targetCenterPx - targetWidthPx/2, 0, targetCenterPx + targetWidthPx/2, 0);
-            grayMarbleGrad.addColorStop(0, '#334155');
+            // [고급 대리석 광택 질감을 위한 그라데이션 선언]
+            const grayMarbleGrad = mainCtx.createLinearGradient(targetCenterPx - targetWidthPx, 0, targetCenterPx + targetWidthPx, 0);
+            grayMarbleGrad.addColorStop(0, '#1e293b');
             grayMarbleGrad.addColorStop(0.3, '#475569');
-            grayMarbleGrad.addColorStop(0.5, '#64748b');
-            grayMarbleGrad.addColorStop(0.8, '#475569');
-            grayMarbleGrad.addColorStop(1, '#1e293b');
+            grayMarbleGrad.addColorStop(0.5, '#cbd5e1'); // highlight
+            grayMarbleGrad.addColorStop(0.7, '#475569');
+            grayMarbleGrad.addColorStop(1, '#0f172a');
 
-            const lightMarbleGrad = mainCtx.createLinearGradient(targetCenterPx - 10, 0, targetCenterPx + 10, 0);
-            lightMarbleGrad.addColorStop(0, '#475569');
+            const lightMarbleGrad = mainCtx.createLinearGradient(targetCenterPx - 15, 0, targetCenterPx + 15, 0);
+            lightMarbleGrad.addColorStop(0, '#334155');
             lightMarbleGrad.addColorStop(0.5, '#94a3b8');
-            lightMarbleGrad.addColorStop(1, '#334155');
+            lightMarbleGrad.addColorStop(1, '#1e293b');
 
-            // [석조 분수대 1단 바닥 받침대 - Marble block]
+            // --- 1단: 바닥 대형 Basin 수로 (하부 풀) ---
             mainCtx.fillStyle = grayMarbleGrad;
             mainCtx.strokeStyle = '#475569';
             mainCtx.lineWidth = 2;
             mainCtx.beginPath();
-            mainCtx.roundRect(targetCenterPx - 40, originPx.y - 12, 80, 12, [3, 3, 0, 0]);
+            mainCtx.roundRect(targetCenterPx - targetWidthPx * 0.7, originPx.y - 12, targetWidthPx * 1.4, 12, [4, 4, 0, 0]);
             mainCtx.fill();
             mainCtx.stroke();
 
-            // [석조 분수대 2단 타원 그릇]
+            // 1단 Basin 수로 수면
+            mainCtx.fillStyle = 'rgba(6, 182, 212, 0.4)';
             mainCtx.beginPath();
-            mainCtx.ellipse(targetCenterPx, originPx.y - 12, targetWidthPx/2, 11, 0, 0, 2 * Math.PI);
-            mainCtx.fillStyle = grayMarbleGrad;
+            mainCtx.ellipse(targetCenterPx, originPx.y - 12, targetWidthPx * 0.65, 4, 0, 0, 2 * Math.PI);
             mainCtx.fill();
-            mainCtx.stroke();
 
-            // [석조 분수대 3단 중앙 돌출 대리석 기둥]
+            // --- 2단: 중간 기둥 및 중간 Bowl ---
+            // 중간 기둥
             mainCtx.fillStyle = lightMarbleGrad;
             mainCtx.beginPath();
-            mainCtx.roundRect(targetCenterPx - 8, originPx.y - 45, 16, 33, [2, 2, 0, 0]);
+            mainCtx.moveTo(targetCenterPx - 12, originPx.y - 12);
+            mainCtx.quadraticCurveTo(targetCenterPx - 8, originPx.y - 25, targetCenterPx - 14, originPx.y - 35);
+            mainCtx.lineTo(targetCenterPx + 14, originPx.y - 35);
+            mainCtx.quadraticCurveTo(targetCenterPx + 8, originPx.y - 25, targetCenterPx + 12, originPx.y - 12);
+            mainCtx.closePath();
             mainCtx.fill();
             mainCtx.stroke();
 
-            // [물 차오름 푸른 입체 수면 그라데이션 및 찰랑이는 물결]
-            const waterGrad = mainCtx.createRadialGradient(targetCenterPx, originPx.y - 14, 2, targetCenterPx, originPx.y - 14, targetWidthPx/2);
-            waterGrad.addColorStop(0, '#22d3ee');
-            waterGrad.addColorStop(0.4, 'rgba(6, 182, 212, 0.7)');
-            waterGrad.addColorStop(1, 'rgba(8, 145, 178, 0.35)');
-
-            mainCtx.fillStyle = waterGrad;
+            // 중간 Bowl
+            mainCtx.fillStyle = grayMarbleGrad;
             mainCtx.beginPath();
-            mainCtx.ellipse(targetCenterPx, originPx.y - 14, targetWidthPx/2.05, 8, 0, 0, 2 * Math.PI);
+            mainCtx.ellipse(targetCenterPx, originPx.y - 35, targetWidthPx * 0.45, 7, 0, 0, 2 * Math.PI);
+            mainCtx.fill();
+            mainCtx.stroke();
+
+            // 중간 Bowl 수면
+            mainCtx.fillStyle = 'rgba(34, 211, 238, 0.45)';
+            mainCtx.beginPath();
+            mainCtx.ellipse(targetCenterPx, originPx.y - 36, targetWidthPx * 0.42, 5, 0, 0, 2 * Math.PI);
             mainCtx.fill();
 
-            // [물줄기 애니메이션 렌더링 - 3단 스프레이 포물선 아크]
+            // --- 3단: 상부 가는 기둥 및 상부 소형 Bowl ---
+            // 상부 기둥
+            mainCtx.fillStyle = lightMarbleGrad;
+            mainCtx.beginPath();
+            mainCtx.moveTo(targetCenterPx - 7, originPx.y - 35);
+            mainCtx.quadraticCurveTo(targetCenterPx - 4, originPx.y - 48, targetCenterPx - 8, originPx.y - 58);
+            mainCtx.lineTo(targetCenterPx + 8, originPx.y - 58);
+            mainCtx.quadraticCurveTo(targetCenterPx + 4, originPx.y - 48, targetCenterPx + 7, originPx.y - 35);
+            mainCtx.closePath();
+            mainCtx.fill();
+            mainCtx.stroke();
+
+            // 상부 소형 Bowl
+            mainCtx.fillStyle = grayMarbleGrad;
+            mainCtx.beginPath();
+            mainCtx.ellipse(targetCenterPx, originPx.y - 58, targetWidthPx * 0.25, 4, 0, 0, 2 * Math.PI);
+            mainCtx.fill();
+            mainCtx.stroke();
+
+            // 상부 Bowl 수면
+            mainCtx.fillStyle = 'rgba(103, 232, 249, 0.6)';
+            mainCtx.beginPath();
+            mainCtx.ellipse(targetCenterPx, originPx.y - 59, targetWidthPx * 0.22, 2.5, 0, 0, 2 * Math.PI);
+            mainCtx.fill();
+
+            // [스프레이 물줄기 애니메이션]
             const seconds = Date.now() / 1000;
-            mainCtx.lineWidth = 1.8;
+            mainCtx.lineWidth = 1.5;
             
-            // 왼쪽 흐르는 물줄기 1
+            // 상부 Bowl에서 흘러내리는 양 갈래 물줄기
             mainCtx.strokeStyle = 'rgba(34, 211, 238, 0.65)';
             mainCtx.beginPath();
-            mainCtx.arc(targetCenterPx - 10, originPx.y - 42, 18 + Math.sin(seconds * 4) * 2, Math.PI * 0.9, 0);
+            mainCtx.arc(targetCenterPx - 10, originPx.y - 52, 10 + Math.sin(seconds * 4) * 1.5, Math.PI * 0.9, 0);
             mainCtx.stroke();
             
-            // 오른쪽 흐르는 물줄기 2
             mainCtx.beginPath();
-            mainCtx.arc(targetCenterPx + 10, originPx.y - 42, 18 + Math.cos(seconds * 4) * 2, Math.PI, 0.1 * Math.PI);
+            mainCtx.arc(targetCenterPx + 10, originPx.y - 52, 10 + Math.cos(seconds * 4) * 1.5, Math.PI, 0.1 * Math.PI);
             mainCtx.stroke();
 
-            // 중앙 높이 솟구치는 물줄기 3
-            mainCtx.strokeStyle = 'rgba(103, 232, 249, 0.8)';
-            mainCtx.lineWidth = 2.5;
+            // 중간 Bowl에서 하부 Basin으로 떨어지는 물줄기
+            mainCtx.strokeStyle = 'rgba(6, 182, 212, 0.45)';
             mainCtx.beginPath();
-            mainCtx.moveTo(targetCenterPx, originPx.y - 45);
-            mainCtx.quadraticCurveTo(targetCenterPx, originPx.y - 70 - Math.sin(seconds * 5) * 4, targetCenterPx + 1, originPx.y - 45);
+            mainCtx.arc(targetCenterPx - 22, originPx.y - 25, 14 + Math.sin(seconds * 3.5) * 2, Math.PI * 0.95, 0.05 * Math.PI);
+            mainCtx.stroke();
+
+            mainCtx.beginPath();
+            mainCtx.arc(targetCenterPx + 22, originPx.y - 25, 14 + Math.cos(seconds * 3.5) * 2, Math.PI * 0.95, 0.05 * Math.PI);
+            mainCtx.stroke();
+
+            // 최상단 노즐에서 하늘로 솟구쳐 오르는 중앙 물줄기
+            mainCtx.strokeStyle = 'rgba(165, 243, 252, 0.85)';
+            mainCtx.lineWidth = 2.2;
+            mainCtx.beginPath();
+            mainCtx.moveTo(targetCenterPx, originPx.y - 58);
+            mainCtx.quadraticCurveTo(targetCenterPx, originPx.y - 82 - Math.sin(seconds * 5) * 3, targetCenterPx + 0.5, originPx.y - 58);
             mainCtx.stroke();
 
             // [실시간 중력 영향 분수 물방울 그리기 (persistent fountain drops)]
@@ -1505,11 +1564,6 @@ html_code = """
             };
         }
 
-        function togglePause() {
-            isPaused = !isPaused;
-            document.getElementById('btn-pause').innerHTML = isPaused ? '<i class="fa-solid fa-play text-lg text-emerald-400"></i>' : '<i class="fa-solid fa-pause text-lg"></i>';
-        }
-
         // --- Tab 2: Interactive Graph Rendering ---
         function initGraphCanvases() {
             if(!graphCanvas) return;
@@ -1530,7 +1584,6 @@ html_code = """
             bindGraphEvent('graph-g', 'graph-g-val', 'm/s²');
         }
 
-        // 그래프 렌더링에 변경 없음
         function drawInteractiveGraphs() {
             if(!graphCtx) return;
 
