@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. 웹 브라우저 탭 및 메인 영역 스타일링을 위한 얇은 여백 추가
+# 2. 웹 브라우저 탭 및 메인 영역 스타일링을 위한 얇은 여백 추가 (오류 발생 매개변수 수정 완료)
 st.markdown("""
     <style>
         /* Streamlit 기본 패딩 최소화 및 배경 매칭 */
@@ -24,7 +24,7 @@ st.markdown("""
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
     </style>
-""", unsafe_allow_value=True)
+""", unsafe_allow_html=True)
 
 # 3. 임베딩할 고해상도 HTML5/CSS3/JavaScript 물리학 엔진 소스코드
 html_code = """
@@ -130,7 +130,7 @@ html_code = """
                     <div>공기 저항 상수(k) = <span id="env-k">0.00</span></div>
                 </div>
 
-                <!-- 메인 그래픽 렌더링 캔버스 -->
+                <!-- 메인 그래핑 렌더링 캔버스 -->
                 <canvas id="physics-canvas" class="w-full h-full cursor-crosshair"></canvas>
                 
                 <!-- 실시간 포물선 궤적 수치 예측 정보창 -->
