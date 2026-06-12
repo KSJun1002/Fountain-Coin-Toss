@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. 웹 브라우저 스타일링 및 마진 최소화
+# 2. 웹 브라우저 스타일링 및 마진 최소화 (제목 글자 잘림 현상 완화 스타일 추가)
 st.markdown("""
     <style>
         .block-container {
@@ -17,6 +17,12 @@ st.markdown("""
             padding-bottom: 0.5rem;
             padding-left: 1.5rem;
             padding-right: 1.5rem;
+        }
+        /* 메인 제목(h1) 한글 자모음 하단부 잘림 문제 완벽 해결 */
+        h1 {
+            line-height: 1.4 !important;
+            padding-bottom: 12px !important;
+            overflow: visible !important;
         }
         iframe {
             border-radius: 16px;
@@ -38,7 +44,7 @@ html_code = """
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght=300;400;500;700;900&display=swap');
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #0f172a;
@@ -236,7 +242,7 @@ html_code = """
                     <!-- Canvas for physics visualization -->
                     <canvas id="physics-canvas" class="w-full h-full cursor-crosshair"></canvas>
                     
-                    <!-- Trajectory Overlay Info Box (Design Requirement: Real-time calculation readout) -->
+                    <!-- Trajectory Overlay Info Box -->
                     <div class="absolute bottom-4 right-4 glass-bright rounded-xl p-3 text-xs space-y-1 text-slate-300 pointer-events-none w-48 border border-white/10">
                         <h4 class="font-bold text-cyan-400 border-b border-white/10 pb-1 mb-1.5 flex items-center justify-between">
                             <span>실시간 물리 예측</span>
@@ -432,7 +438,7 @@ html_code = """
             </div>
         </div>
 
-        <!-- ④ LEARNING MODE SCREEN (탭 분리 설계) -->
+        <!-- ④ LEARNING MODE SCREEN -->
         <section id="learn-screen" class="w-full hidden space-y-6 animate-fadeIn">
             
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
@@ -789,9 +795,7 @@ html_code = """
         let ytCanvas, ytCtx;
 
         // Scaling factors
-        // Canvas coordinate reference system: Launcher is at x=1.5m, ground level is at baseline.
-        // We will transform these physical metrics to visual pixels.
-        let originPx = { x: 80, y: 310 }; // (0,0) offset on Main Canvas (will be updated dynamically)
+        let originPx = { x: 80, y: 310 }; 
         const pxPerMeter = 18; // scale factor
 
         // --- Screen & State Routers ---
@@ -831,11 +835,8 @@ html_code = """
 
         function resizeMainCanvas() {
             const rect = mainCanvas.parentNode.getBoundingClientRect();
-            // Fallback inside streamlit in case parent bounding width/height starts at 0
             mainCanvas.width = rect.width || 600;
             mainCanvas.height = rect.height || 384;
-            
-            // Dynamically lock ground origin near the bottom of canvas
             originPx.y = mainCanvas.height - 74;
         }
 
@@ -867,10 +868,7 @@ html_code = """
             hideAllScreens();
             document.getElementById('game-screen').classList.remove('hidden');
             currentScreen = 'game';
-            
-            // CRITICAL: Force canvas size re-evaluation once container hidden attribute is removed!
             resizeMainCanvas(); 
-            
             initLevel();
             drawScene();
         }
@@ -908,7 +906,6 @@ html_code = """
                 document.getElementById('tab-graph').classList.remove('hidden');
                 document.getElementById('tab-graph-btn').className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-cyan-400 bg-slate-800 shadow";
                 
-                // Initialize canvases after Tab is visible
                 graphCanvas = document.getElementById('chart-canvas');
                 xtCanvas = document.getElementById('xt-canvas');
                 ytCanvas = document.getElementById('yt-canvas');
@@ -957,7 +954,6 @@ html_code = """
             initLevel();
         }
 
-        // Listen for slide updates in Settings Modal
         document.getElementById('param-drag').addEventListener('input', function(e) {
             document.getElementById('drag-display-val').innerText = parseFloat(e.target.value).toFixed(2);
         });
@@ -1024,7 +1020,7 @@ html_code = """
             drawScene();
         }
 
-        // --- Prediction Math Eng ---
+        // --- Prediction Math ---
         function getLauncherParams() {
             return {
                 v0: parseFloat(document.getElementById('v0-slider').value),
@@ -1094,7 +1090,6 @@ html_code = """
         }
 
         function updatePhysics() {
-            // Coin impact splash particles physics
             for(let i=particles.length-1; i>=0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
@@ -1104,9 +1099,8 @@ html_code = """
                 if(p.alpha <= 0) particles.splice(i, 1);
             }
 
-            // Real-time Fountain Water drops (Persistent animation)
             const targetCenterPx = originPx.x + (targetX * pxPerMeter);
-            if (Math.random() < 0.4) { // Generate fountain water droplets from the top (y - 58)
+            if (Math.random() < 0.4) { 
                 fountainDrops.push({
                     x: targetCenterPx + (Math.random() * 4 - 2),
                     y: originPx.y - 58,
@@ -1121,7 +1115,7 @@ html_code = """
                 const d = fountainDrops[i];
                 d.x += d.vx;
                 d.y += d.vy;
-                d.vy += 0.16; // gravity pulls fountain water down
+                d.vy += 0.16; 
                 d.alpha -= 0.015;
                 if (d.y > originPx.y - 12 || d.alpha <= 0) {
                     fountainDrops.splice(i, 1);
@@ -1260,7 +1254,7 @@ html_code = """
             }
         }
 
-        // --- History telemetry logging ---
+        // --- History logging ---
         function addToHistory(isSuccess) {
             const historyLog = document.getElementById('history-log');
             
@@ -1291,7 +1285,7 @@ html_code = """
             document.getElementById('history-log').innerHTML = '<div class="text-slate-500 italic text-center py-8">아직 시도한 실험이 없습니다.</div>';
         }
 
-        // --- Scene Visual Renderer (Canvas Engine) ---
+        // --- Scene Visual Renderer ---
         function drawScene() {
             if(!mainCtx || mainCanvas.width === 0 || mainCanvas.height === 0) return;
             mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
@@ -1306,19 +1300,18 @@ html_code = """
             mainCtx.lineWidth = 4;
             mainCtx.stroke();
 
-            // Ground tiling pattern
+            // Ground tiling
             mainCtx.fillStyle = '#0f172a';
             mainCtx.fillRect(0, originPx.y + 2, mainCanvas.width, mainCanvas.height - originPx.y);
 
-            // 1. Draw Target Classical Stone Fountain (대리석 3단 석조 분수대 정교화)
+            // 1. Draw Target Classical Stone Fountain
             const targetCenterPx = originPx.x + (targetX * pxPerMeter);
             const targetWidthPx = targetWidth * pxPerMeter;
 
-            // [고급 대리석 광택 질감을 위한 그라데이션 선언]
             const grayMarbleGrad = mainCtx.createLinearGradient(targetCenterPx - targetWidthPx, 0, targetCenterPx + targetWidthPx, 0);
             grayMarbleGrad.addColorStop(0, '#1e293b');
             grayMarbleGrad.addColorStop(0.3, '#475569');
-            grayMarbleGrad.addColorStop(0.5, '#cbd5e1'); // highlight
+            grayMarbleGrad.addColorStop(0.5, '#cbd5e1'); 
             grayMarbleGrad.addColorStop(0.7, '#475569');
             grayMarbleGrad.addColorStop(1, '#0f172a');
 
@@ -1327,7 +1320,7 @@ html_code = """
             lightMarbleGrad.addColorStop(0.5, '#94a3b8');
             lightMarbleGrad.addColorStop(1, '#1e293b');
 
-            // --- 1단: 바닥 대형 Basin 수로 (하부 풀) ---
+            // --- 1단: 바닥 대형 Basin ---
             mainCtx.fillStyle = grayMarbleGrad;
             mainCtx.strokeStyle = '#475569';
             mainCtx.lineWidth = 2;
@@ -1336,14 +1329,12 @@ html_code = """
             mainCtx.fill();
             mainCtx.stroke();
 
-            // 1단 Basin 수로 수면
             mainCtx.fillStyle = 'rgba(6, 182, 212, 0.4)';
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 12, targetWidthPx * 0.65, 4, 0, 0, 2 * Math.PI);
             mainCtx.fill();
 
             // --- 2단: 중간 기둥 및 중간 Bowl ---
-            // 중간 기둥
             mainCtx.fillStyle = lightMarbleGrad;
             mainCtx.beginPath();
             mainCtx.moveTo(targetCenterPx - 12, originPx.y - 12);
@@ -1354,21 +1345,18 @@ html_code = """
             mainCtx.fill();
             mainCtx.stroke();
 
-            // 중간 Bowl
             mainCtx.fillStyle = grayMarbleGrad;
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 35, targetWidthPx * 0.45, 7, 0, 0, 2 * Math.PI);
             mainCtx.fill();
             mainCtx.stroke();
 
-            // 중간 Bowl 수면
             mainCtx.fillStyle = 'rgba(34, 211, 238, 0.45)';
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 36, targetWidthPx * 0.42, 5, 0, 0, 2 * Math.PI);
             mainCtx.fill();
 
             // --- 3단: 상부 가는 기둥 및 상부 소형 Bowl ---
-            // 상부 기둥
             mainCtx.fillStyle = lightMarbleGrad;
             mainCtx.beginPath();
             mainCtx.moveTo(targetCenterPx - 7, originPx.y - 35);
@@ -1379,24 +1367,20 @@ html_code = """
             mainCtx.fill();
             mainCtx.stroke();
 
-            // 상부 소형 Bowl
             mainCtx.fillStyle = grayMarbleGrad;
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 58, targetWidthPx * 0.25, 4, 0, 0, 2 * Math.PI);
             mainCtx.fill();
             mainCtx.stroke();
 
-            // 상부 Bowl 수면
             mainCtx.fillStyle = 'rgba(103, 232, 249, 0.6)';
             mainCtx.beginPath();
             mainCtx.ellipse(targetCenterPx, originPx.y - 59, targetWidthPx * 0.22, 2.5, 0, 0, 2 * Math.PI);
             mainCtx.fill();
 
-            // [스프레이 물줄기 애니메이션]
             const seconds = Date.now() / 1000;
             mainCtx.lineWidth = 1.5;
             
-            // 상부 Bowl에서 흘러내리는 양 갈래 물줄기
             mainCtx.strokeStyle = 'rgba(34, 211, 238, 0.65)';
             mainCtx.beginPath();
             mainCtx.arc(targetCenterPx - 10, originPx.y - 52, 10 + Math.sin(seconds * 4) * 1.5, Math.PI * 0.9, 0);
@@ -1406,7 +1390,6 @@ html_code = """
             mainCtx.arc(targetCenterPx + 10, originPx.y - 52, 10 + Math.cos(seconds * 4) * 1.5, Math.PI, 0.1 * Math.PI);
             mainCtx.stroke();
 
-            // 중간 Bowl에서 하부 Basin으로 떨어지는 물줄기
             mainCtx.strokeStyle = 'rgba(6, 182, 212, 0.45)';
             mainCtx.beginPath();
             mainCtx.arc(targetCenterPx - 22, originPx.y - 25, 14 + Math.sin(seconds * 3.5) * 2, Math.PI * 0.95, 0.05 * Math.PI);
@@ -1416,7 +1399,6 @@ html_code = """
             mainCtx.arc(targetCenterPx + 22, originPx.y - 25, 14 + Math.cos(seconds * 3.5) * 2, Math.PI * 0.95, 0.05 * Math.PI);
             mainCtx.stroke();
 
-            // 최상단 노즐에서 하늘로 솟구쳐 오르는 중앙 물줄기
             mainCtx.strokeStyle = 'rgba(165, 243, 252, 0.85)';
             mainCtx.lineWidth = 2.2;
             mainCtx.beginPath();
@@ -1424,7 +1406,6 @@ html_code = """
             mainCtx.quadraticCurveTo(targetCenterPx, originPx.y - 82 - Math.sin(seconds * 5) * 3, targetCenterPx + 0.5, originPx.y - 58);
             mainCtx.stroke();
 
-            // [실시간 중력 영향 분수 물방울 그리기 (persistent fountain drops)]
             for (let d of fountainDrops) {
                 mainCtx.fillStyle = `rgba(165, 243, 252, ${d.alpha})`;
                 mainCtx.beginPath();
@@ -1452,17 +1433,16 @@ html_code = """
             mainCtx.strokeRect(0, -6, 22, 12);
             mainCtx.restore();
 
-            // Coordinates info text
             mainCtx.fillStyle = '#475569';
             mainCtx.font = '8px monospace';
             mainCtx.fillText('x=0m', originPx.x - 12, originPx.y + 14);
 
-            // 3. Draw Preview Path (점선 가이드라인)
+            // 3. Draw Preview Path
             if(!coin.active) {
                 drawPreviewTrajectory(v0, theta, h);
             }
 
-            // Draw splash particles (for coin impact)
+            // Splash particles
             for(let p of particles) {
                 mainCtx.fillStyle = p.color;
                 mainCtx.globalAlpha = p.alpha;
@@ -1470,9 +1450,9 @@ html_code = """
                 mainCtx.arc(p.x, p.y, 2.5, 0, Math.PI*2);
                 mainCtx.fill();
             }
-            mainCtx.globalAlpha = 1.0; // reset
+            mainCtx.globalAlpha = 1.0; 
 
-            // 4. Draw Active Spinning Coin & Trail (회전하는 금빛 입체 동전)
+            // 4. Draw Active Spinning Coin & Trail
             if(coin.active) {
                 if(coin.trail.length > 1) {
                     mainCtx.beginPath();
@@ -1487,25 +1467,21 @@ html_code = """
                     mainCtx.stroke();
                 }
 
-                // Render golden specular spinning coin
                 const coinPx = physicsToCanvas(coin.x, coin.y);
                 mainCtx.save();
                 mainCtx.translate(coinPx.x, coinPx.y);
-                mainCtx.scale(Math.abs(Math.sin(coin.spinAngle)), 1.0); // 자전하는 입체감 효과
+                mainCtx.scale(Math.abs(Math.sin(coin.spinAngle)), 1.0); 
 
-                // Exterior Golden ring
                 mainCtx.beginPath();
                 mainCtx.arc(0, 0, 9, 0, Math.PI * 2);
                 mainCtx.fillStyle = '#d97706';
                 mainCtx.fill();
 
-                // Inner Golden core
                 mainCtx.beginPath();
                 mainCtx.arc(0, 0, 7.5, 0, Math.PI * 2);
                 mainCtx.fillStyle = '#fbbf24';
                 mainCtx.fill();
 
-                // '₩' Text symbol inside coin
                 mainCtx.fillStyle = '#78350f';
                 mainCtx.font = 'black 9px Arial';
                 mainCtx.textAlign = 'center';
@@ -1516,7 +1492,6 @@ html_code = """
             }
         }
 
-        // Render preview path dot-by-dot
         function drawPreviewTrajectory(v0, theta_rad, h) {
             mainCtx.beginPath();
             mainCtx.setLineDash([3, 4]);
@@ -1553,10 +1528,9 @@ html_code = """
                 if(px_y < 0) break;
             }
             mainCtx.stroke();
-            mainCtx.setLineDash([]); // clear dash state
+            mainCtx.setLineDash([]); 
         }
 
-        // Coordinate transformation helpers
         function physicsToCanvas(mX, mY) {
             return {
                 x: originPx.x + (mX * pxPerMeter),
@@ -1684,6 +1658,7 @@ html_code = """
             ctx.fillText('수평거리 (x)', pad.left + chartW/2 - 20, pad.top + chartH + 32);
         }
 
+        // x-t Graph
         function drawXTGraph(canvas, ctx, v0, theta, h, g) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const pad = { top: 20, right: 15, bottom: 25, left: 35 };
@@ -1720,6 +1695,7 @@ html_code = """
             ctx.fillText('거리(x)', 5, pad.top + 10);
         }
 
+        // y-t Graph
         function drawYTGraph(canvas, ctx, v0, theta, h, g) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const pad = { top: 20, right: 15, bottom: 25, left: 35 };
